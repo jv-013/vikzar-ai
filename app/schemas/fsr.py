@@ -1,18 +1,36 @@
-"""Force-sensitive resistor (FSR) sensor structures"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import List, Dict
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class FSRReading:
-    timestamp: float
-    values: List[float]
+class FSR(BaseModel):
+    """
+    Force Sensitive Resistor (FSR) feature schema.
 
+    These biomechanical features are extracted by the ETL
+    from a 1-second sliding window. These are NOT raw FSR
+    sensor values.
+    """
 
-@dataclass
-class FSR:
-    readings: List[FSRReading] = field(default_factory=list)
-    metadata: Dict[str, object] = field(default_factory=dict)
+    # Load Features
+    mean_load: float = Field(..., ge=0)
+    peak_load: float = Field(..., ge=0)
+    min_load: float = Field(..., ge=0)
+
+    # Force Features
+    total_impulse: float = Field(..., ge=0)
+    ground_contact_time: float = Field(..., ge=0)
+
+    # Loading Characteristics
+    loading_rate: float = Field(..., ge=0)
+    unloading_rate: float = Field(..., ge=0)
+
+    # Pressure Distribution
+    heel_load_percentage: float = Field(..., ge=0, le=100)
+    midfoot_load_percentage: float = Field(..., ge=0, le=100)
+    forefoot_load_percentage: float = Field(..., ge=0, le=100)
+
+    # Future Expansion
+    left_right_loading_symmetry: float | None = Field(
+        default=None,
+        ge=0,
+        le=100
+    )
