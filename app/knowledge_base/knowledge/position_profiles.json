@@ -1,0 +1,29 @@
+{
+    "Goalkeeper": {
+        "movement_profile": "Explosive",
+        "expected_workload": "Medium",
+        "sprint_frequency": "Low",
+        "direction_changes": "Medium"
+    },
+
+    "Defender": {
+        "movement_profile": "Defensive",
+        "expected_workload": "High",
+        "sprint_frequency": "Medium",
+        "direction_changes": "High"
+    },
+
+    "Midfielder": {
+        "movement_profile": "High Endurance",
+        "expected_workload": "Very High",
+        "sprint_frequency": "High",
+        "direction_changes": "High"
+    },
+
+    "Forward": {
+        "movement_profile": "Attacking",
+        "expected_workload": "High",
+        "sprint_frequency": "Very High",
+        "direction_changes": "High"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "Beginner": {
+        "expected_running_intensity": "Low",
+        "expected_sprint_frequency": "Low",
+        "expected_jump_frequency": "Low"
+    },
+
+    "Intermediate": {
+        "expected_running_intensity": "Medium",
+        "expected_sprint_frequency": "Medium",
+        "expected_jump_frequency": "Medium"
+    },
+
+    "Advanced": {
+        "expected_running_intensity": "High",
+        "expected_sprint_frequency": "High",
+        "expected_jump_frequency": "High"
+    },
+
+    "Elite": {
+        "expected_running_intensity": "Very High",
+        "expected_sprint_frequency": "Very High",
+        "expected_jump_frequency": "High"
+    }
+}

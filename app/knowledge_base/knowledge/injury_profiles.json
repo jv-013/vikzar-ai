@@ -1,0 +1,40 @@
+{
+    "ACL": {
+        "risk_level": "High",
+        "affected_muscles": [
+            "Quadriceps",
+            "Hamstrings"
+        ],
+        "recovery_notes": "Monitor knee stability, landing mechanics and asymmetry."
+    },
+
+    "Hamstring Strain": {
+        "risk_level": "High",
+        "affected_muscles": [
+            "Hamstrings"
+        ],
+        "recovery_notes": "Monitor sprinting intensity and hamstring fatigue."
+    },
+
+    "Ankle Sprain": {
+        "risk_level": "Medium",
+        "affected_muscles": [
+            "Calf"
+        ],
+        "recovery_notes": "Monitor balance, landing stability and ground contact."
+    },
+
+    "Achilles Tendinopathy": {
+        "risk_level": "Medium",
+        "affected_muscles": [
+            "Calf"
+        ],
+        "recovery_notes": "Monitor propulsion force and cumulative load."
+    },
+
+    "None": {
+        "risk_level": "Low",
+        "affected_muscles": [],
+        "recovery_notes": "No previous injury."
+    }
+}

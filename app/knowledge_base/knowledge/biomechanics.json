@@ -1,0 +1,33 @@
+{
+    "High Ground Contact Time": {
+        "recommendation": "Possible fatigue or inefficient running mechanics."
+    },
+
+    "Low Symmetry Score": {
+        "recommendation": "Possible unilateral weakness or previous injury."
+    },
+
+    "High Braking Force": {
+        "recommendation": "Higher eccentric muscle demand."
+    },
+
+    "High Propulsion Force": {
+        "recommendation": "Explosive movement detected."
+    },
+
+    "High Movement Intensity": {
+        "recommendation": "Monitor cumulative workload."
+    },
+
+    "High Fatigue": {
+        "recommendation": "Consider recovery or reduced training intensity."
+    },
+
+    "Low Cadence": {
+        "recommendation": "Possible gait alteration."
+    },
+
+    "High Landing Force": {
+        "recommendation": "Monitor landing mechanics and knee loading."
+    }
+}
