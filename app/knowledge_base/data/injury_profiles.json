@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "profiles": [
+    {
+      "injury_key": "hamstring_strain_history",
+      "display_name": "Hamstring Strain History",
+      "aliases": ["hamstring strain", "hamstring injury", "hamstring"],
+      "relevant_metric_keys": ["derived.stride_length", "derived.propulsion_force", "emg.hamstring_quadriceps_ratio", "muscles.left_right_activation_asymmetry"],
+      "interpretation_note": "Use as historical context when reviewing measurable sprint mechanics and available measured or estimated muscle features; it is not a diagnosis or risk score.",
+      "source_ids": ["SRC-HAMSTRING-SPRINT-2021"]
+    },
+    {
+      "injury_key": "acl_injury_history",
+      "display_name": "ACL Injury History",
+      "aliases": ["acl injury", "acl reconstruction", "anterior cruciate ligament"],
+      "relevant_metric_keys": ["derived.landing_stability", "derived.change_of_direction_angle", "fsr.ground_contact_time", "symmetry.overall_symmetry_score"],
+      "interpretation_note": "Use as historical context when reviewing measured landing, contact, directional-change, and symmetry features; it is not a clinical assessment.",
+      "source_ids": ["SRC-ACL-COD-2024"]
+    },
+    {
+      "injury_key": "ankle_sprain_history",
+      "display_name": "Ankle Sprain History",
+      "aliases": ["ankle sprain", "ankle injury"],
+      "relevant_metric_keys": ["imu.peak_angular_velocity", "derived.change_of_direction_angle", "fsr.loading_symmetry", "derived.landing_stability"],
+      "interpretation_note": "Use as historical context when reviewing measured rotational, directional-change, loading-symmetry, and landing-stability features; it is not a diagnosis.",
+      "source_ids": ["SRC-ANKLE-BIOMECHANICS-2022"]
+    }
+  ]
+}

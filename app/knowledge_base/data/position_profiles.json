@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "profiles": [
+    {
+      "position_key": "goalkeeper",
+      "display_name": "Goalkeeper",
+      "aliases": ["keeper", "gk"],
+      "movement_demands": ["diving", "landing", "short acceleration", "lateral movement"],
+      "relevant_metric_keys": ["imu.resultant_acceleration", "fsr.ground_contact_time", "derived.landing_stability", "derived.change_of_direction_angle"],
+      "interpretation_note": "Interpret landing and lateral movement metrics in the context of repeated dives and short-range repositioning.",
+      "source_ids": ["SRC-POSITION-DEMANDS-2024"]
+    },
+    {
+      "position_key": "defender",
+      "display_name": "Defender",
+      "aliases": ["centre_back", "center_back", "full_back", "wing_back"],
+      "movement_demands": ["deceleration", "change of direction", "aerial landing", "acceleration"],
+      "relevant_metric_keys": ["derived.braking_force", "derived.change_of_direction_angle", "derived.landing_stability", "symmetry.overall_symmetry_score"],
+      "interpretation_note": "Interpret high-intensity braking, cutting, and landing mechanics alongside left-right movement symmetry.",
+      "source_ids": ["SRC-POSITION-DEMANDS-2024"]
+    },
+    {
+      "position_key": "midfielder",
+      "display_name": "Midfielder",
+      "aliases": ["central_midfielder", "centre_midfielder", "cm"],
+      "movement_demands": ["repeated running", "turning", "acceleration", "deceleration"],
+      "relevant_metric_keys": ["derived.cadence", "derived.cumulative_mechanical_load", "derived.turning_rate", "fsr.total_impulse"],
+      "interpretation_note": "Interpret repeated movement demand using cadence, directional movement, and accumulated mechanical-load features.",
+      "source_ids": ["SRC-POSITION-DEMANDS-2024"]
+    },
+    {
+      "position_key": "winger",
+      "display_name": "Winger",
+      "aliases": ["wide_midfielder", "wide_forward"],
+      "movement_demands": ["sprinting", "acceleration", "cutting", "deceleration"],
+      "relevant_metric_keys": ["imu.peak_angular_velocity", "derived.stride_length", "derived.propulsion_force", "derived.change_of_direction_angle"],
+      "interpretation_note": "Interpret sprint and cutting mechanics using measurable propulsion, stride, angular-velocity, and directional-change features.",
+      "source_ids": ["SRC-POSITION-DEMANDS-2024"]
+    },
+    {
+      "position_key": "forward",
+      "display_name": "Forward",
+      "aliases": ["striker", "centre_forward", "center_forward"],
+      "movement_demands": ["explosive acceleration", "sprinting", "deceleration", "landing"],
+      "relevant_metric_keys": ["imu.resultant_acceleration", "derived.propulsion_force", "derived.braking_force", "fsr.ground_contact_time"],
+      "interpretation_note": "Interpret explosive movement with acceleration, propulsion, braking, and contact-time features; this profile does not imply injury risk.",
+      "source_ids": ["SRC-POSITION-DEMANDS-2024"]
+    }
+  ]
+}

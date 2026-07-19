@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "knowledge_version": "1.1.0",
+  "generated_on": "2026-07-19",
+  "scientific_source_count": 8,
+  "scientific_sources": [
+    {
+      "source_id": "SRC-SPORT-WEARABLES-2020",
+      "title": "Sport Biomechanics Applications Using Inertial, Force, and EMG Sensors: A Literature Overview",
+      "publication_year": 2020,
+      "publisher": "Sensors",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://pubmed.ncbi.nlm.nih.gov/32676126/",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-IMU-VALIDITY-2024",
+      "title": "Validity of inertial measurement units for tracking human motion: a systematic review",
+      "publication_year": 2024,
+      "publisher": "Sports Biomechanics",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://doi.org/10.1080/14763141.2021.1990383",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-GROUND-CONTACT-2022",
+      "title": "Ground Contact Time Estimating Wearable Sensor to Measure Spatio-Temporal Aspects of Gait",
+      "publication_year": 2022,
+      "publisher": "Sensors",
+      "source_type": "peer_reviewed_study",
+      "persistent_identifier": "https://doi.org/10.3390/s22093132",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-SENIAM-1999",
+      "title": "European Recommendations for Surface ElectroMyoGraphy",
+      "publication_year": 1999,
+      "publisher": "SENIAM Project",
+      "source_type": "technical_guideline",
+      "persistent_identifier": "https://www.seniam.org/",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-POSITION-DEMANDS-2024",
+      "title": "The Influence of Playing Position on Physical, Physiological, and Technical Demands in Adult Male Soccer Matches: A Systematic Scoping Review with Evidence Gap Map",
+      "publication_year": 2024,
+      "publisher": "Sports Medicine",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://doi.org/10.1007/s40279-024-02088-z",
+      "evidence_level": "high",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-HAMSTRING-SPRINT-2021",
+      "title": "Sprinting Biomechanics and Hamstring Injuries: Is There a Link? A Literature Review",
+      "publication_year": 2021,
+      "publisher": "Sports",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://doi.org/10.3390/sports9100141",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-ACL-COD-2024",
+      "title": "Differences in Biomechanical Determinants of ACL Injury Risk in Change of Direction Tasks Between Males and Females: A Systematic Review and Meta-Analysis",
+      "publication_year": 2024,
+      "publisher": "Sports Medicine - Open",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://doi.org/10.1186/s40798-024-00701-z",
+      "evidence_level": "high",
+      "review_status": "reference_verified"
+    },
+    {
+      "source_id": "SRC-ANKLE-BIOMECHANICS-2022",
+      "title": "Chronic ankle instability modifies proximal lower extremity biomechanics during sports maneuvers that may increase the risk of ACL injury: A systematic review",
+      "publication_year": 2022,
+      "publisher": "Frontiers in Physiology",
+      "source_type": "systematic_review",
+      "persistent_identifier": "https://doi.org/10.3389/fphys.2022.1036267",
+      "evidence_level": "moderate",
+      "review_status": "reference_verified"
+    }
+  ]
+}

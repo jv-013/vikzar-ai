@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0.0",
+  "references": [
+    {
+      "metric_key": "raw_imu.linear_acceleration",
+      "display_name": "IMU Linear Acceleration Sample",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "hardware_measured", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.linear_acceleration"], "scientific_basis": "An IMU accelerometer directly measures device-frame linear acceleration."},
+      "movement_contexts": ["running", "sprinting", "landing", "acceleration", "deceleration"],
+      "interpretation_note": "Raw acceleration must be calibrated and transformed by ETL before biomechanical interpretation."
+    },
+    {
+      "metric_key": "raw_imu.angular_velocity",
+      "display_name": "IMU Angular Velocity Sample",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "hardware_measured", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.angular_velocity"], "scientific_basis": "An IMU gyroscope directly measures device-frame angular velocity."},
+      "movement_contexts": ["turning", "cutting", "rotation"],
+      "interpretation_note": "Raw angular velocity must be calibrated and transformed by ETL before biomechanical interpretation."
+    },
+    {
+      "metric_key": "raw_fsr.normal_load",
+      "display_name": "FSR Normal Load Sample",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020"],
+      "provenance": {"category": "hardware_measured", "hardware_sources": ["fsr"], "measurable_feature_paths": ["raw_fsr.normal_load"], "scientific_basis": "An FSR directly measures sensor-interface force or pressure response after device calibration."},
+      "movement_contexts": ["foot strike", "push-off", "landing", "ground contact"],
+      "interpretation_note": "FSR output represents calibrated local loading and is not a direct whole-body ground-reaction-force measurement."
+    },
+    {
+      "metric_key": "raw_emg.electrical_potential",
+      "display_name": "EMG Electrical Potential Sample",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-SENIAM-1999"],
+      "provenance": {"category": "hardware_measured", "hardware_sources": ["emg"], "measurable_feature_paths": ["raw_emg.electrical_potential"], "scientific_basis": "Surface EMG electrodes directly measure electrical potential differences associated with muscle activity."},
+      "movement_contexts": ["training", "muscle activation"],
+      "interpretation_note": "Surface EMG interpretation requires synchronized acquisition, signal processing, and appropriate electrode placement."
+    },
+    {
+      "metric_key": "imu.resultant_acceleration",
+      "display_name": "Resultant Acceleration",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.linear_acceleration"], "scientific_basis": "Resultant acceleration is calculated from the vector magnitude of tri-axial IMU acceleration."},
+      "movement_contexts": ["running", "sprinting", "landing", "acceleration", "deceleration"],
+      "interpretation_note": "Interpret alongside sensor placement and movement phase rather than as a standalone physiological measure."
+    },
+    {
+      "metric_key": "imu.peak_angular_velocity",
+      "display_name": "Peak Angular Velocity",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.angular_velocity"], "scientific_basis": "Peak angular velocity is the maximum calibrated angular-velocity magnitude in the ETL analysis window."},
+      "movement_contexts": ["turning", "cutting", "rotation"],
+      "interpretation_note": "Use with the window duration and movement context supplied by ETL."
+    },
+    {
+      "metric_key": "fsr.total_impulse",
+      "display_name": "FSR Load Impulse",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["fsr"], "measurable_feature_paths": ["raw_fsr.normal_load"], "scientific_basis": "Impulse is calculated by integrating calibrated FSR load over the contact interval."},
+      "movement_contexts": ["ground contact", "landing", "push-off"],
+      "interpretation_note": "Represents sensor-derived loading impulse and should not be interpreted as a laboratory force-plate result."
+    },
+    {
+      "metric_key": "fsr.ground_contact_time",
+      "display_name": "Ground Contact Time",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-GROUND-CONTACT-2022"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["fsr"], "measurable_feature_paths": ["raw_fsr.normal_load"], "scientific_basis": "Ground contact time is calculated from the duration of a calibrated FSR contact event."},
+      "movement_contexts": ["running", "sprinting", "landing"],
+      "interpretation_note": "Contact-event detection and calibration are ETL responsibilities."
+    },
+    {
+      "metric_key": "fsr.loading_symmetry",
+      "display_name": "Loading Symmetry",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["fsr"], "measurable_feature_paths": ["fsr.left_right_loading_symmetry"], "scientific_basis": "Loading symmetry is calculated by comparing paired left and right calibrated FSR loading features."},
+      "movement_contexts": ["running", "landing", "weight transfer"],
+      "interpretation_note": "Only available when paired left-right loading information is present."
+    },
+    {
+      "metric_key": "derived.cadence",
+      "display_name": "Cadence",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-GROUND-CONTACT-2022"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["imu.estimated_cadence", "fsr.ground_contact_time"], "scientific_basis": "Cadence is derived from detected step events and their timing over the ETL window."},
+      "movement_contexts": ["running", "sprinting"],
+      "interpretation_note": "Cadence is a temporal locomotion feature, not a direct sensor measurement."
+    },
+    {
+      "metric_key": "derived.stride_length",
+      "display_name": "Stride Length Estimate",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-GROUND-CONTACT-2022"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["raw_imu.linear_acceleration", "raw_fsr.normal_load"], "scientific_basis": "Stride length is estimated by ETL from calibrated motion and step-event timing rather than directly measured by the shin pad."},
+      "movement_contexts": ["running", "sprinting"],
+      "interpretation_note": "This value is an ETL estimate and should remain traceable to its calibration method."
+    },
+    {
+      "metric_key": "derived.propulsion_force",
+      "display_name": "Propulsion Force Proxy",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["raw_imu.linear_acceleration", "raw_fsr.normal_load"], "scientific_basis": "A propulsion proxy is derived from calibrated forward acceleration and FSR loading during push-off."},
+      "movement_contexts": ["acceleration", "sprinting", "push-off"],
+      "interpretation_note": "This is a wearable-derived proxy, not a direct laboratory force measurement."
+    },
+    {
+      "metric_key": "derived.braking_force",
+      "display_name": "Braking Force Proxy",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["raw_imu.linear_acceleration", "raw_fsr.normal_load"], "scientific_basis": "A braking proxy is derived from calibrated deceleration and FSR loading during the braking phase."},
+      "movement_contexts": ["deceleration", "cutting", "landing"],
+      "interpretation_note": "This is a wearable-derived proxy, not a direct laboratory force measurement."
+    },
+    {
+      "metric_key": "derived.change_of_direction_angle",
+      "display_name": "Change-of-Direction Angle",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-ACL-COD-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.angular_velocity", "raw_imu.linear_acceleration"], "scientific_basis": "Change-of-direction angle is derived from the estimated change in movement heading across a detected maneuver."},
+      "movement_contexts": ["cutting", "turning", "direction change"],
+      "interpretation_note": "Accuracy depends on ETL heading estimation and device orientation handling."
+    },
+    {
+      "metric_key": "derived.landing_stability",
+      "display_name": "Landing Stability",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-ACL-COD-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["imu.resultant_acceleration", "fsr.total_impulse", "fsr.ground_contact_time"], "scientific_basis": "Landing stability is derived from post-contact acceleration behavior and FSR loading characteristics over the ETL window."},
+      "movement_contexts": ["landing", "jumping", "deceleration"],
+      "interpretation_note": "This feature describes sensor-derived movement behavior and is not a clinical stability assessment."
+    },
+    {
+      "metric_key": "derived.cumulative_mechanical_load",
+      "display_name": "Cumulative Mechanical Load",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-POSITION-DEMANDS-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["imu.resultant_acceleration", "fsr.total_impulse"], "scientific_basis": "Cumulative mechanical load is calculated by accumulating defined wearable-derived loading features over the session."},
+      "movement_contexts": ["training", "match workload"],
+      "interpretation_note": "The accumulation method and reset boundary must be supplied by ETL and session processing."
+    },
+    {
+      "metric_key": "derived.turning_rate",
+      "display_name": "Turning Rate",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-ACL-COD-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu"], "measurable_feature_paths": ["raw_imu.angular_velocity"], "scientific_basis": "Turning rate is derived from calibrated angular-velocity data over a detected turning interval."},
+      "movement_contexts": ["turning", "cutting"],
+      "interpretation_note": "Interpret together with the detected movement phase."
+    },
+    {
+      "metric_key": "symmetry.overall_symmetry_score",
+      "display_name": "Overall Symmetry Score",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-IMU-VALIDITY-2024"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["imu", "fsr", "emg"], "measurable_feature_paths": ["symmetry.quadriceps_symmetry", "symmetry.hamstring_symmetry", "symmetry.loading_symmetry", "symmetry.stride_symmetry"], "scientific_basis": "Overall symmetry is calculated from available paired left-right muscle, loading, and movement symmetry components."},
+      "movement_contexts": ["running", "landing", "training", "match movement"],
+      "interpretation_note": "Only the components available for the current operating mode should contribute to an ETL-defined score."
+    },
+    {
+      "metric_key": "emg.hamstring_quadriceps_ratio",
+      "display_name": "EMG Hamstring-to-Quadriceps Ratio",
+      "source_ids": ["SRC-SENIAM-1999", "SRC-HAMSTRING-SPRINT-2021"],
+      "provenance": {"category": "mathematically_derived", "hardware_sources": ["emg"], "measurable_feature_paths": ["emg.left_hamstring_mean", "emg.right_hamstring_mean", "emg.left_quadriceps_mean", "emg.right_quadriceps_mean"], "scientific_basis": "The ratio is calculated from synchronized EMG-derived hamstring and quadriceps activation summaries."},
+      "movement_contexts": ["training", "muscle activation"],
+      "interpretation_note": "Available only when synchronized EMG data are collected during training."
+    },
+    {
+      "metric_key": "muscles.left_right_activation_asymmetry",
+      "display_name": "Estimated Left-Right Muscle Activation Asymmetry",
+      "source_ids": ["SRC-SPORT-WEARABLES-2020", "SRC-SENIAM-1999"],
+      "provenance": {"category": "ai_estimated", "hardware_sources": ["imu", "fsr"], "measurable_feature_paths": ["imu.resultant_acceleration", "fsr.total_impulse", "derived.cadence", "symmetry.loading_symmetry"], "scientific_basis": "A model trained against synchronized training-mode EMG may estimate activation asymmetry from measurable lower-limb movement and loading features."},
+      "movement_contexts": ["match movement", "muscle activity estimation"],
+      "interpretation_note": "This is a model estimate that requires model confidence and must not be treated as direct EMG measurement."
+    }
+  ]
+}

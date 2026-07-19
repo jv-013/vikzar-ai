@@ -3,11 +3,11 @@
 from .feature_vector import FeatureVector
 from .player import Player
 from .session import Session
-from .imu import IMU, IMUReading
-from .fsr import FSR, FSRReading
-from .emg import EMG, EMGReading
-from .muscles import Muscles, MuscleActivation
-from .derived import Derived, DerivedSignals
+from .imu import IMU
+from .fsr import FSR
+from .emg import EMG
+from .muscles import Muscles
+from .derived import Derived
 from .symmetry import Symmetry
 from .context import Context
 from .labels import Labels
@@ -19,15 +19,10 @@ __all__ = [
     "Player",
     "Session",
     "IMU",
-    "IMUReading",
     "FSR",
-    "FSRReading",
     "EMG",
-    "EMGReading",
     "Muscles",
-    "MuscleActivation",
     "Derived",
-    "DerivedSignals",
     "Symmetry",
     "Context",
     "Labels",

@@ -1,99 +1,251 @@
-"""
-Main Validation Engine for Vikzar AI.
-"""
+"""Main AI-side FeatureVector validation engine."""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from pydantic import ValidationError as PydanticValidationError
 
 from app.schemas.feature_vector import FeatureVector
-
-from .report import ValidationReport
-from .rules import (
-    POSITIVE_NUMBER,
-    PERCENTAGE,
-    CONFIDENCE_SCORE,
-    NON_EMPTY_STRING,
+from app.validation.exceptions import (
+    FeatureValidationError,
+    SchemaValidationError,
+    ValidationError,
 )
+from app.validation.report import ValidationReport
+from app.validation.rules import DEFAULT_RULES, FeatureVectorRule
+
+
+logger = logging.getLogger("app.validation")
 
 
 class FeatureVectorValidator:
-    """
-    Validates a FeatureVector before it enters the AI pipeline.
+    """Validate FeatureVectors before they enter the AI pipeline.
+
+    Parameters:
+        rules: Optional sequence of semantic validation rules. When omitted,
+            the production default rules are used.
+
+    Returns:
+        A validator that parses inputs through the FeatureVector schema and
+        runs semantic validation rules without mutating the FeatureVector.
+
+    Exceptions:
+        None.
     """
 
-    def validate(self, feature_vector: FeatureVector) -> ValidationReport:
+    def __init__(
+        self,
+        rules: Sequence[FeatureVectorRule] | None = None,
+    ) -> None:
+        self._rules: tuple[FeatureVectorRule, ...] = tuple(rules or DEFAULT_RULES)
+
+    def validate(self, feature_vector: FeatureVector | Mapping[str, Any]) -> ValidationReport:
+        """Validate a FeatureVector and return a structured report.
+
+        Parameters:
+            feature_vector: Parsed FeatureVector or mapping that can be parsed
+                into a FeatureVector.
+
+        Returns:
+            ValidationReport containing errors and warnings.
+
+        Exceptions:
+            SchemaValidationError: Raised when input cannot be parsed as a
+                FeatureVector.
+            ValidationError: Raised when an unexpected validator failure occurs.
+        """
+
+        parsed_vector = self._parse_feature_vector(feature_vector)
         report = ValidationReport()
 
-        self._validate_player(feature_vector, report)
-        self._validate_imu(feature_vector, report)
-        self._validate_fsr(feature_vector, report)
-        self._validate_emg(feature_vector, report)
-        self._validate_muscles(feature_vector, report)
+        for rule in self._rules:
+            try:
+                issues = rule.validate(parsed_vector)
+            except Exception as exc:
+                self._log_unexpected_rule_failure(rule, parsed_vector, exc)
+                raise ValidationError(
+                    f"Validation rule '{rule.name}' failed unexpectedly."
+                ) from exc
 
+            report.extend(issues)
+
+        self._log_report(parsed_vector, report)
         return report
 
-    def _validate_player(
+    def validate_or_raise(
         self,
-        feature_vector: FeatureVector,
-        report: ValidationReport,
-    ) -> None:
+        feature_vector: FeatureVector | Mapping[str, Any],
+    ) -> FeatureVector:
+        """Validate input and return a parsed FeatureVector when valid.
 
-        player = feature_vector.player
+        Parameters:
+            feature_vector: Parsed FeatureVector or mapping that can be parsed
+                into a FeatureVector.
 
-        if not POSITIVE_NUMBER.validator(player.age):
-            report.add_error("Player age must be positive.")
+        Returns:
+            Parsed FeatureVector. Existing FeatureVector objects are returned
+            unchanged.
 
-        if not NON_EMPTY_STRING.validator(player.player_id):
-            report.add_error("Player ID cannot be empty.")
+        Exceptions:
+            SchemaValidationError: Raised when input cannot be parsed as a
+                FeatureVector.
+            FeatureValidationError: Raised when semantic validation fails.
+            ValidationError: Raised when an unexpected validator failure occurs.
+        """
 
-    def _validate_imu(
+        parsed_vector = self._parse_feature_vector(feature_vector)
+        report = self.validate(parsed_vector)
+
+        if report.is_valid:
+            return parsed_vector
+
+        raise FeatureValidationError(
+            "FeatureVector failed AI validation.",
+            report=report,
+            issues=report.errors,
+        )
+
+    def _parse_feature_vector(
         self,
-        feature_vector: FeatureVector,
-        report: ValidationReport,
-    ) -> None:
+        feature_vector: FeatureVector | Mapping[str, Any],
+    ) -> FeatureVector:
+        """Parse supported input into a FeatureVector.
 
-        imu = feature_vector.imu
+        Parameters:
+            feature_vector: Parsed FeatureVector or mapping input.
 
-        if not POSITIVE_NUMBER.validator(imu.peak_acceleration):
-            report.add_error("Peak acceleration is invalid.")
+        Returns:
+            Parsed FeatureVector instance.
 
-    def _validate_fsr(
-        self,
-        feature_vector: FeatureVector,
-        report: ValidationReport,
-    ) -> None:
+        Exceptions:
+            SchemaValidationError: Raised when input cannot be parsed.
+        """
 
-        fsr = feature_vector.fsr
+        if isinstance(feature_vector, FeatureVector):
+            return feature_vector
 
-        if not POSITIVE_NUMBER.validator(fsr.peak_load):
-            report.add_error("Peak load is invalid.")
-
-    def _validate_emg(
-        self,
-        feature_vector: FeatureVector,
-        report: ValidationReport,
-    ) -> None:
-
-        emg = feature_vector.emg
-
-        if not POSITIVE_NUMBER.validator(emg.peak_activation):
-            report.add_error("Peak EMG activation is invalid.")
-
-    def _validate_muscles(
-        self,
-        feature_vector: FeatureVector,
-        report: ValidationReport,
-    ) -> None:
-
-        muscles = feature_vector.muscles
-
-        if not CONFIDENCE_SCORE.validator(
-            muscles.confidence_score
-        ):
-            report.add_error(
-                "Muscle confidence score must be between 0 and 1."
+        if not isinstance(feature_vector, Mapping):
+            raise SchemaValidationError(
+                "Validation input must be a FeatureVector or mapping."
             )
 
-        if not PERCENTAGE.validator(
-            muscles.estimated_muscle_fatigue
-        ):
-            report.add_error(
-                "Estimated muscle fatigue must be between 0 and 100."
+        try:
+            return _parse_model(FeatureVector, feature_vector)
+        except PydanticValidationError as exc:
+            logger.warning(
+                "FeatureVector schema validation failed.",
+                extra={
+                    "component": "validation",
+                    "error_count": len(exc.errors()),
+                },
             )
+            raise SchemaValidationError(
+                "Input does not match the FeatureVector schema."
+            ) from exc
+
+    def _log_report(
+        self,
+        feature_vector: FeatureVector,
+        report: ValidationReport,
+    ) -> None:
+        """Log validation outcome using structured logging fields.
+
+        Parameters:
+            feature_vector: Parsed FeatureVector that was validated.
+            report: Validation report generated by the validator.
+
+        Returns:
+            None.
+
+        Exceptions:
+            None.
+        """
+
+        log_data = {
+            "component": "validation",
+            "feature_vector_id": feature_vector.metadata.feature_vector_id,
+            "player_id": feature_vector.player.player_id,
+            "session_id": feature_vector.session.session_id,
+            "is_valid": report.is_valid,
+            "error_count": report.error_count,
+            "warning_count": report.warning_count,
+        }
+
+        if report.is_valid:
+            logger.info("FeatureVector validation passed.", extra=log_data)
+        else:
+            logger.warning("FeatureVector validation failed.", extra=log_data)
+
+    def _log_unexpected_rule_failure(
+        self,
+        rule: FeatureVectorRule,
+        feature_vector: FeatureVector,
+        exc: Exception,
+    ) -> None:
+        """Log an unexpected validation rule exception.
+
+        Parameters:
+            rule: Rule that raised unexpectedly.
+            feature_vector: FeatureVector being validated.
+            exc: Original exception raised by the rule.
+
+        Returns:
+            None.
+
+        Exceptions:
+            None.
+        """
+
+        logger.exception(
+            "FeatureVector validation rule failed unexpectedly.",
+            extra={
+                "component": "validation",
+                "rule": rule.name,
+                "feature_vector_id": feature_vector.metadata.feature_vector_id,
+                "exception_type": exc.__class__.__name__,
+            },
+        )
+
+
+def validate_feature_vector(
+    feature_vector: FeatureVector | Mapping[str, Any],
+) -> FeatureVector:
+    """Validate input and return a FeatureVector when valid.
+
+    Parameters:
+        feature_vector: Parsed FeatureVector or mapping that can be parsed into
+            a FeatureVector.
+
+    Returns:
+        Parsed FeatureVector when validation succeeds.
+
+    Exceptions:
+        SchemaValidationError: Raised when input cannot be parsed as a
+            FeatureVector.
+        FeatureValidationError: Raised when semantic validation fails.
+        ValidationError: Raised when an unexpected validator failure occurs.
+    """
+
+    return FeatureVectorValidator().validate_or_raise(feature_vector)
+
+
+def _parse_model(model_type: type[FeatureVector], data: Mapping[str, Any]) -> FeatureVector:
+    """Parse a mapping into a Pydantic model across Pydantic versions.
+
+    Parameters:
+        model_type: Pydantic model class to parse.
+        data: Mapping input to parse.
+
+    Returns:
+        Parsed FeatureVector model.
+
+    Exceptions:
+        pydantic.ValidationError: Raised when parsing fails.
+    """
+
+    if hasattr(model_type, "model_validate"):
+        return model_type.model_validate(data)  # type: ignore[attr-defined]
+    return model_type.parse_obj(data)
