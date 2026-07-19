@@ -1,66 +1,50 @@
-"""Unit tests for individual validation rules."""
+"""Unit tests for RawFeatureVector semantic validation rules."""
 
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import timedelta
 
-from app.schemas.feature_vector import FeatureVector
+from app.schemas.raw_feature_vector import RawFeatureVector
 from app.validation.rules import (
+    GroupWindowRule,
     IdentityFieldsRule,
-    InternalConsistencyRule,
-    MetadataTimeWindowRule,
+    QualityAnnotationRule,
 )
 from test_validator import _valid_payload
 
 
 def test_identity_fields_rule_rejects_blank_player_id() -> None:
-    """IdentityFieldsRule rejects blank identity strings."""
+    """IdentityFieldsRule rejects blank RawFeatureVector identity strings."""
 
     payload = deepcopy(_valid_payload())
     payload["player"]["player_id"] = "  "
-    feature_vector = FeatureVector(**payload)
 
-    issues = IdentityFieldsRule().validate(feature_vector)
+    issues = IdentityFieldsRule().validate(RawFeatureVector(**payload))
 
     assert len(issues) == 1
     assert issues[0].code == "VAL_EMPTY_IDENTITY_FIELD"
     assert issues[0].field_path == "player.player_id"
 
 
-def test_metadata_time_window_rule_rejects_invalid_window_order() -> None:
-    """MetadataTimeWindowRule rejects windows that do not move forward."""
+def test_group_window_rule_rejects_invalid_window_order() -> None:
+    """GroupWindowRule guards model-constructed input at the trust boundary."""
 
-    payload = deepcopy(_valid_payload())
-    payload["metadata"]["window_start"] = payload["metadata"]["window_end"]
-    feature_vector = FeatureVector(**payload)
+    raw_feature_vector = RawFeatureVector(**_valid_payload())
+    raw_feature_vector.groups["left_lower_limb"].window_end = 0.0
 
-    issues = MetadataTimeWindowRule().validate(feature_vector)
+    issues = GroupWindowRule().validate(raw_feature_vector)
 
-    assert "VAL_INVALID_TIME_WINDOW" in {issue.code for issue in issues}
-
-
-def test_metadata_time_window_rule_rejects_timestamp_outside_window() -> None:
-    """MetadataTimeWindowRule rejects timestamps outside their feature window."""
-
-    payload = deepcopy(_valid_payload())
-    payload["metadata"]["timestamp"] = (
-        payload["metadata"]["window_end"] + timedelta(milliseconds=1)
-    )
-    feature_vector = FeatureVector(**payload)
-
-    issues = MetadataTimeWindowRule().validate(feature_vector)
-
-    assert "VAL_TIMESTAMP_OUTSIDE_WINDOW" in {issue.code for issue in issues}
+    assert "VAL_INVALID_GROUP_TIME_WINDOW" in {issue.code for issue in issues}
 
 
-def test_internal_consistency_rule_rejects_load_order_violation() -> None:
-    """InternalConsistencyRule rejects impossible FSR load ordering."""
+def test_quality_annotation_rule_rejects_mismatched_keys() -> None:
+    """Every carried ETL biomarker must retain one matching quality record."""
 
-    payload = deepcopy(_valid_payload())
-    payload["fsr"]["mean_load"] = 50.0
-    feature_vector = FeatureVector(**payload)
+    raw_feature_vector = RawFeatureVector(**_valid_payload())
+    domain = raw_feature_vector.groups["left_lower_limb"].motion
+    assert domain is not None
+    domain.quality.clear()
 
-    issues = InternalConsistencyRule().validate(feature_vector)
+    issues = QualityAnnotationRule().validate(raw_feature_vector)
 
-    assert "VAL_INCONSISTENT_FSR_LOAD" in {issue.code for issue in issues}
+    assert "VAL_QUALITY_KEY_MISMATCH" in {issue.code for issue in issues}

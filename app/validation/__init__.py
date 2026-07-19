@@ -1,4 +1,4 @@
-"""AI-side FeatureVector validation utilities for Vikzar AI."""
+"""AI-side RawFeatureVector validation utilities for Vikzar AI."""
 
 from app.validation.exceptions import (
     FeatureValidationError,
@@ -8,7 +8,13 @@ from app.validation.exceptions import (
     ValidationError,
 )
 from app.validation.report import ValidationIssue, ValidationReport
-from app.validation.validator import FeatureVectorValidator, validate_feature_vector
+from app.validation.validator import (
+    FeatureVectorValidator,
+    RawFeatureVectorValidator,
+    ValidatedRawFeatureVector,
+    validate_feature_vector,
+    validate_raw_feature_vector,
+)
 
 __all__ = [
     "FeatureValidationError",
@@ -19,5 +25,8 @@ __all__ = [
     "ValidationError",
     "ValidationIssue",
     "ValidationReport",
+    "RawFeatureVectorValidator",
+    "ValidatedRawFeatureVector",
     "validate_feature_vector",
+    "validate_raw_feature_vector",
 ]

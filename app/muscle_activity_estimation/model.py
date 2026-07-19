@@ -6,7 +6,7 @@ from typing import Protocol, runtime_checkable
 
 from app.lookup_engine.entities import LookupResult
 from app.muscle_activity_estimation.entities import MuscleEstimationOutput
-from app.schemas.feature_vector import FeatureVector
+from app.validation import ValidatedRawFeatureVector
 
 
 @runtime_checkable
@@ -19,13 +19,13 @@ class MuscleEstimationModel(Protocol):
 
     def estimate(
         self,
-        feature_vector: FeatureVector,
+        feature_vector: ValidatedRawFeatureVector,
         lookup_result: LookupResult,
     ) -> MuscleEstimationOutput:
         """Estimate named muscle activity from validated pipeline inputs.
 
         Parameters:
-            feature_vector: FeatureVector already accepted by validation.
+            feature_vector: RawFeatureVector already accepted by Validation.
             lookup_result: Immutable contextual output for the same vector.
 
         Returns:

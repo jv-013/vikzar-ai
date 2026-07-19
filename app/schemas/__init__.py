@@ -1,4 +1,4 @@
-"""Schemas package for vikzar-ai"""
+"""Shared contracts for the Vikzar AI runtime pipeline."""
 
 from .feature_vector import FeatureVector
 from .player import Player
@@ -13,6 +13,16 @@ from .context import Context
 from .labels import Labels
 from .metadata import Metadata
 from .system import System
+from .domain_biomarkers import DomainBiomarkers
+from .group_feature_set import GroupFeatureSet
+from .hardware_provenance import HardwareProvenance
+from .quality_info import (
+    BiomarkerQualityInfo,
+    QualityFlagInfo,
+    QualityStatusInfo,
+    SetQualityObservationInfo,
+)
+from .raw_feature_vector import RawFeatureVector
 
 __all__ = [
     "FeatureVector",
@@ -28,4 +38,12 @@ __all__ = [
     "Labels",
     "Metadata",
     "System",
+    "BiomarkerQualityInfo",
+    "DomainBiomarkers",
+    "GroupFeatureSet",
+    "HardwareProvenance",
+    "QualityFlagInfo",
+    "QualityStatusInfo",
+    "RawFeatureVector",
+    "SetQualityObservationInfo",
 ]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unittest
-from types import SimpleNamespace
+from datetime import datetime, timezone
 
 from app.knowledge_base.entities import PositionProfile
 from app.knowledge_base.repository import KnowledgeBaseRepository
@@ -13,7 +13,12 @@ from app.lookup_engine.exceptions import (
     InjuryKnowledgeNotFoundError,
     PositionKnowledgeNotFoundError,
 )
-from app.schemas.feature_vector import FeatureVector
+from app.schemas.group_feature_set import GroupFeatureSet
+from app.schemas.hardware_provenance import HardwareProvenance
+from app.schemas.player import Player
+from app.schemas.raw_feature_vector import RawFeatureVector
+from app.schemas.session import Session
+from app.validation import ValidatedRawFeatureVector, validate_raw_feature_vector
 
 
 class LookupEngineTests(unittest.TestCase):
@@ -72,17 +77,17 @@ class LookupEngineTests(unittest.TestCase):
                 )
             )
 
-    def test_does_not_modify_feature_vector(self) -> None:
-        """Lookup preserves the ETL-owned feature vector object and values."""
+    def test_does_not_modify_raw_feature_vector(self) -> None:
+        """Lookup preserves the validated ETL-owned object and values."""
 
         feature_vector = _feature_vector(position="forward")
         original_player = feature_vector.player
-        original_context = feature_vector.context
+        original_groups = feature_vector.groups
 
         self.engine.lookup(feature_vector)
 
         self.assertIs(feature_vector.player, original_player)
-        self.assertIs(feature_vector.context, original_context)
+        self.assertIs(feature_vector.groups, original_groups)
         self.assertEqual(feature_vector.player.position, "forward")
 
     def test_shared_engine_is_cached_for_startup_use(self) -> None:
@@ -96,19 +101,35 @@ def _feature_vector(
     position: str,
     injury_history: str | None = None,
     injury_status: str | None = None,
-) -> FeatureVector:
-    """Construct the minimal validated-upstream shape required by Lookup Engine tests."""
+) -> ValidatedRawFeatureVector:
+    """Construct a validated RawFeatureVector for Lookup Engine tests."""
 
-    field_values = {
-        "metadata": SimpleNamespace(feature_vector_id="feature-vector-001"),
-        "player": SimpleNamespace(
-            player_id="player-001",
-            position=position,
-            injury_history=injury_history,
-            injury_status=injury_status,
-        ),
-        "context": SimpleNamespace(),
-    }
-    if hasattr(FeatureVector, "model_construct"):
-        return FeatureVector.model_construct(**field_values)
-    return FeatureVector.construct(**field_values)
+    return validate_raw_feature_vector(
+        RawFeatureVector(
+            feature_vector_id="feature-vector-001",
+            timestamp=datetime(2026, 7, 19, tzinfo=timezone.utc),
+            schema_version="1.0.0",
+            source="vikzar_etl_v1",
+            player=Player(
+                player_id="player-001",
+                age=24,
+                sex="male",
+                dominant_leg="right",
+                position=position,
+                injury_history=injury_history,
+                injury_status=injury_status,
+            ),
+            session=Session(session_id="session-001"),
+            hardware=HardwareProvenance(
+                firmware_revision="fw-1.0.0",
+                hardware_revision="hw-v1",
+                protocol_version="1",
+            ),
+            groups={
+                "left_lower_limb": GroupFeatureSet(
+                    window_start=0.0,
+                    window_end=1000.0,
+                )
+            },
+        )
+    )

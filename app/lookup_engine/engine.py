@@ -1,4 +1,4 @@
-"""Read-only orchestration between validated FeatureVectors and knowledge data."""
+"""Read-only orchestration between validated runtime data and knowledge."""
 
 from __future__ import annotations
 
@@ -31,14 +31,14 @@ from app.lookup_engine.exceptions import (
     KnowledgeReferenceNotFoundError,
     PositionKnowledgeNotFoundError,
 )
-from app.schemas.feature_vector import FeatureVector
+from app.validation import ValidatedRawFeatureVector
 
 
 logger = logging.getLogger("app.lookup_engine")
 
 
 class LookupEngine:
-    """Retrieve immutable scientific context for one validated FeatureVector.
+    """Retrieve immutable scientific context for one validated RawFeatureVector.
 
     Parameters:
         knowledge_base: Read-only, startup-loaded repository injected by the
@@ -54,12 +54,12 @@ class LookupEngine:
     def __init__(self, knowledge_base: KnowledgeBaseRepository) -> None:
         self._knowledge_base = knowledge_base
 
-    def lookup(self, feature_vector: FeatureVector) -> LookupResult:
-        """Retrieve contextual knowledge without changing the FeatureVector.
+    def lookup(self, feature_vector: ValidatedRawFeatureVector) -> LookupResult:
+        """Retrieve contextual knowledge without changing validated ETL output.
 
         Parameters:
-            feature_vector: FeatureVector already accepted by the validation
-                module. The Lookup Engine never parses or validates raw input.
+            feature_vector: RawFeatureVector already accepted by Validation.
+                The Lookup Engine never parses or validates ETL input.
 
         Returns:
             Immutable LookupResult containing only Lookup Engine DTOs.
@@ -87,7 +87,7 @@ class LookupEngine:
         )
         provenance = tuple(_to_provenance_context(reference) for reference in references)
         result = LookupResult(
-            feature_vector_id=feature_vector.metadata.feature_vector_id,
+            feature_vector_id=feature_vector.feature_vector_id,
             player_profile=_to_player_profile_context(player_profile),
             position_profile=_to_position_profile_context(position_profile),
             injury_profiles=tuple(
@@ -103,7 +103,10 @@ class LookupEngine:
         self._log_lookup(feature_vector, result)
         return result
 
-    def _get_position_profile(self, feature_vector: FeatureVector) -> PositionProfile:
+    def _get_position_profile(
+        self,
+        feature_vector: ValidatedRawFeatureVector,
+    ) -> PositionProfile:
         """Resolve the required football-position knowledge profile."""
 
         profile = self._knowledge_base.get_position_profile(feature_vector.player.position)
@@ -116,7 +119,7 @@ class LookupEngine:
 
     def _get_injury_profiles(
         self,
-        feature_vector: FeatureVector,
+        feature_vector: ValidatedRawFeatureVector,
     ) -> tuple[InjuryProfile, ...]:
         """Resolve supplied injury history and current status without inference."""
 
@@ -197,14 +200,17 @@ class LookupEngine:
         return tuple(sources)
 
     @staticmethod
-    def _log_lookup(feature_vector: FeatureVector, result: LookupResult) -> None:
+    def _log_lookup(
+        feature_vector: ValidatedRawFeatureVector,
+        result: LookupResult,
+    ) -> None:
         """Log successful lookup using structured, non-clinical metadata only."""
 
         logger.info(
             "Contextual knowledge lookup completed.",
             extra={
                 "component": "lookup_engine",
-                "feature_vector_id": feature_vector.metadata.feature_vector_id,
+                "feature_vector_id": feature_vector.feature_vector_id,
                 "player_id": feature_vector.player.player_id,
                 "metric_context_count": len(result.metric_context),
                 "injury_context_count": len(result.injury_profiles),
@@ -213,14 +219,17 @@ class LookupEngine:
         )
 
     @staticmethod
-    def _log_lookup_failure(feature_vector: FeatureVector, lookup_type: str) -> None:
+    def _log_lookup_failure(
+        feature_vector: ValidatedRawFeatureVector,
+        lookup_type: str,
+    ) -> None:
         """Log expected unresolved contextual knowledge without source values."""
 
         logger.warning(
             "Contextual knowledge lookup failed.",
             extra={
                 "component": "lookup_engine",
-                "feature_vector_id": feature_vector.metadata.feature_vector_id,
+                "feature_vector_id": feature_vector.feature_vector_id,
                 "player_id": feature_vector.player.player_id,
                 "lookup_type": lookup_type,
             },

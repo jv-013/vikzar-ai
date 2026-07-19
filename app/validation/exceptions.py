@@ -1,4 +1,4 @@
-"""Custom exceptions used by the AI FeatureVector validation module."""
+"""Custom exceptions used by the AI RawFeatureVector validation module."""
 
 from app.validation.report import ValidationIssue, ValidationReport
 
@@ -53,11 +53,11 @@ class ValidationError(Exception):
 
 
 class FeatureValidationError(ValidationError):
-    """Raised when a parsed FeatureVector fails semantic validation."""
+    """Raised when a parsed RawFeatureVector fails semantic validation."""
 
 
 class SchemaValidationError(ValidationError):
-    """Raised when input cannot be parsed as a FeatureVector schema."""
+    """Raised when input cannot be parsed as a RawFeatureVector schema."""
 
 
 class MissingFieldError(ValidationError):

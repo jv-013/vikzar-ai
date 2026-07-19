@@ -10,12 +10,12 @@ def test_validation_exception_to_dict_includes_report_and_issues() -> None:
     report = ValidationReport()
     report.add_error(
         code="VAL_TEST",
-        field_path="metadata.feature_vector_id",
+        field_path="feature_vector_id",
         message="Example validation failure.",
     )
 
     exc = FeatureValidationError(
-        "FeatureVector failed validation.",
+        "RawFeatureVector failed validation.",
         report=report,
         issues=report.errors,
     )
@@ -23,12 +23,12 @@ def test_validation_exception_to_dict_includes_report_and_issues() -> None:
     payload = exc.to_dict()
 
     assert payload["error_type"] == "FeatureValidationError"
-    assert payload["message"] == "FeatureVector failed validation."
+    assert payload["message"] == "RawFeatureVector failed validation."
     assert payload["report"] is not None
     assert payload["issues"] == [
         {
             "code": "VAL_TEST",
-            "field_path": "metadata.feature_vector_id",
+            "field_path": "feature_vector_id",
             "message": "Example validation failure.",
             "severity": "error",
         }

@@ -17,7 +17,7 @@ from app.muscle_activity_estimation.exceptions import (
     MuscleEstimationOutputError,
 )
 from app.muscle_activity_estimation.model import MuscleEstimationModel
-from app.schemas.feature_vector import FeatureVector
+from app.validation import ValidatedRawFeatureVector
 
 
 logger = logging.getLogger("app.muscle_activity_estimation")
@@ -49,13 +49,13 @@ class MuscleActivityEstimator:
 
     def estimate(
         self,
-        feature_vector: FeatureVector,
+        feature_vector: ValidatedRawFeatureVector,
         lookup_result: LookupResult,
     ) -> MuscleActivityEstimate:
-        """Estimate muscle activity for one validated FeatureVector.
+        """Estimate muscle activity for one validated RawFeatureVector.
 
         Parameters:
-            feature_vector: FeatureVector already accepted by validation.
+            feature_vector: RawFeatureVector already accepted by Validation.
             lookup_result: Immutable Lookup Engine output for the same vector.
 
         Returns:
@@ -69,7 +69,7 @@ class MuscleActivityEstimator:
                 public output contract is invalid.
         """
 
-        feature_vector_id = feature_vector.metadata.feature_vector_id
+        feature_vector_id = feature_vector.feature_vector_id
         if lookup_result.feature_vector_id != feature_vector_id:
             self._log_input_failure(feature_vector_id, lookup_result.feature_vector_id)
             raise MuscleEstimationInputError(
@@ -104,7 +104,7 @@ class MuscleActivityEstimator:
 
     def _run_model(
         self,
-        feature_vector: FeatureVector,
+        feature_vector: ValidatedRawFeatureVector,
         lookup_result: LookupResult,
     ) -> MuscleEstimationOutput:
         """Invoke the injected model and verify its declared return contract."""
@@ -116,7 +116,7 @@ class MuscleActivityEstimator:
                 "Muscle estimation model execution failed.",
                 extra={
                     "component": "muscle_activity_estimation",
-                    "feature_vector_id": feature_vector.metadata.feature_vector_id,
+                    "feature_vector_id": feature_vector.feature_vector_id,
                     "exception_type": exc.__class__.__name__,
                 },
             )
@@ -126,7 +126,7 @@ class MuscleActivityEstimator:
 
         if not isinstance(output, MuscleEstimationOutput):
             self._log_output_failure(
-                feature_vector.metadata.feature_vector_id,
+                feature_vector.feature_vector_id,
                 TypeError("Unexpected model output type."),
             )
             raise MuscleEstimationOutputError(

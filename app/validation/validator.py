@@ -1,250 +1,157 @@
-"""Main AI-side FeatureVector validation engine."""
+"""Validation boundary for ETL-owned RawFeatureVectors entering AI."""
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, TypeAlias
 
 from pydantic import ValidationError as PydanticValidationError
 
-from app.schemas.feature_vector import FeatureVector
+from app.schemas.raw_feature_vector import RawFeatureVector
 from app.validation.exceptions import (
     FeatureValidationError,
     SchemaValidationError,
     ValidationError,
 )
 from app.validation.report import ValidationReport
-from app.validation.rules import DEFAULT_RULES, FeatureVectorRule
+from app.validation.rules import DEFAULT_RULES, RawFeatureVectorRule
 
 
 logger = logging.getLogger("app.validation")
 
+# The alias makes the trust boundary explicit without allocating or mapping a
+# second object. Only validate_raw_feature_vector creates this runtime type.
+ValidatedRawFeatureVector: TypeAlias = RawFeatureVector
 
-class FeatureVectorValidator:
-    """Validate FeatureVectors before they enter the AI pipeline.
 
-    Parameters:
-        rules: Optional sequence of semantic validation rules. When omitted,
-            the production default rules are used.
+class RawFeatureVectorValidator:
+    """Validate ETL-owned RawFeatureVectors before downstream AI processing."""
 
-    Returns:
-        A validator that parses inputs through the FeatureVector schema and
-        runs semantic validation rules without mutating the FeatureVector.
+    def __init__(self, rules: Sequence[RawFeatureVectorRule] | None = None) -> None:
+        """Create a validator using injected rules or the production defaults."""
 
-    Exceptions:
-        None.
-    """
+        self._rules: tuple[RawFeatureVectorRule, ...] = tuple(rules or DEFAULT_RULES)
 
-    def __init__(
+    def validate(
         self,
-        rules: Sequence[FeatureVectorRule] | None = None,
-    ) -> None:
-        self._rules: tuple[FeatureVectorRule, ...] = tuple(rules or DEFAULT_RULES)
+        raw_feature_vector: RawFeatureVector | Mapping[str, Any],
+    ) -> ValidationReport:
+        """Return a structured report for one RawFeatureVector input."""
 
-    def validate(self, feature_vector: FeatureVector | Mapping[str, Any]) -> ValidationReport:
-        """Validate a FeatureVector and return a structured report.
-
-        Parameters:
-            feature_vector: Parsed FeatureVector or mapping that can be parsed
-                into a FeatureVector.
-
-        Returns:
-            ValidationReport containing errors and warnings.
-
-        Exceptions:
-            SchemaValidationError: Raised when input cannot be parsed as a
-                FeatureVector.
-            ValidationError: Raised when an unexpected validator failure occurs.
-        """
-
-        parsed_vector = self._parse_feature_vector(feature_vector)
+        parsed_vector = self._parse_raw_feature_vector(raw_feature_vector)
         report = ValidationReport()
 
         for rule in self._rules:
             try:
-                issues = rule.validate(parsed_vector)
+                report.extend(rule.validate(parsed_vector))
             except Exception as exc:
                 self._log_unexpected_rule_failure(rule, parsed_vector, exc)
                 raise ValidationError(
                     f"Validation rule '{rule.name}' failed unexpectedly."
                 ) from exc
 
-            report.extend(issues)
-
         self._log_report(parsed_vector, report)
         return report
 
     def validate_or_raise(
         self,
-        feature_vector: FeatureVector | Mapping[str, Any],
-    ) -> FeatureVector:
-        """Validate input and return a parsed FeatureVector when valid.
+        raw_feature_vector: RawFeatureVector | Mapping[str, Any],
+    ) -> ValidatedRawFeatureVector:
+        """Validate input and return the explicit ETL-to-AI trusted contract."""
 
-        Parameters:
-            feature_vector: Parsed FeatureVector or mapping that can be parsed
-                into a FeatureVector.
-
-        Returns:
-            Parsed FeatureVector. Existing FeatureVector objects are returned
-            unchanged.
-
-        Exceptions:
-            SchemaValidationError: Raised when input cannot be parsed as a
-                FeatureVector.
-            FeatureValidationError: Raised when semantic validation fails.
-            ValidationError: Raised when an unexpected validator failure occurs.
-        """
-
-        parsed_vector = self._parse_feature_vector(feature_vector)
+        parsed_vector = self._parse_raw_feature_vector(raw_feature_vector)
         report = self.validate(parsed_vector)
-
         if report.is_valid:
             return parsed_vector
-
         raise FeatureValidationError(
-            "FeatureVector failed AI validation.",
+            "RawFeatureVector failed AI validation.",
             report=report,
             issues=report.errors,
         )
 
-    def _parse_feature_vector(
+    def _parse_raw_feature_vector(
         self,
-        feature_vector: FeatureVector | Mapping[str, Any],
-    ) -> FeatureVector:
-        """Parse supported input into a FeatureVector.
+        raw_feature_vector: RawFeatureVector | Mapping[str, Any],
+    ) -> RawFeatureVector:
+        """Parse supported input into the locked RawFeatureVector schema."""
 
-        Parameters:
-            feature_vector: Parsed FeatureVector or mapping input.
-
-        Returns:
-            Parsed FeatureVector instance.
-
-        Exceptions:
-            SchemaValidationError: Raised when input cannot be parsed.
-        """
-
-        if isinstance(feature_vector, FeatureVector):
-            return feature_vector
-
-        if not isinstance(feature_vector, Mapping):
+        if isinstance(raw_feature_vector, RawFeatureVector):
+            return raw_feature_vector
+        if not isinstance(raw_feature_vector, Mapping):
             raise SchemaValidationError(
-                "Validation input must be a FeatureVector or mapping."
+                "Validation input must be a RawFeatureVector or mapping."
             )
-
         try:
-            return _parse_model(FeatureVector, feature_vector)
+            return _parse_model(RawFeatureVector, raw_feature_vector)
         except PydanticValidationError as exc:
             logger.warning(
-                "FeatureVector schema validation failed.",
-                extra={
-                    "component": "validation",
-                    "error_count": len(exc.errors()),
-                },
+                "RawFeatureVector schema validation failed.",
+                extra={"component": "validation", "error_count": len(exc.errors())},
             )
             raise SchemaValidationError(
-                "Input does not match the FeatureVector schema."
+                "Input does not match the RawFeatureVector schema."
             ) from exc
 
+    @staticmethod
     def _log_report(
-        self,
-        feature_vector: FeatureVector,
+        raw_feature_vector: RawFeatureVector,
         report: ValidationReport,
     ) -> None:
-        """Log validation outcome using structured logging fields.
-
-        Parameters:
-            feature_vector: Parsed FeatureVector that was validated.
-            report: Validation report generated by the validator.
-
-        Returns:
-            None.
-
-        Exceptions:
-            None.
-        """
+        """Log validation outcome without recording ETL biomarker values."""
 
         log_data = {
             "component": "validation",
-            "feature_vector_id": feature_vector.metadata.feature_vector_id,
-            "player_id": feature_vector.player.player_id,
-            "session_id": feature_vector.session.session_id,
+            "feature_vector_id": raw_feature_vector.feature_vector_id,
+            "player_id": raw_feature_vector.player.player_id,
+            "session_id": raw_feature_vector.session.session_id,
             "is_valid": report.is_valid,
             "error_count": report.error_count,
             "warning_count": report.warning_count,
         }
-
         if report.is_valid:
-            logger.info("FeatureVector validation passed.", extra=log_data)
+            logger.info("RawFeatureVector validation passed.", extra=log_data)
         else:
-            logger.warning("FeatureVector validation failed.", extra=log_data)
+            logger.warning("RawFeatureVector validation failed.", extra=log_data)
 
+    @staticmethod
     def _log_unexpected_rule_failure(
-        self,
-        rule: FeatureVectorRule,
-        feature_vector: FeatureVector,
+        rule: RawFeatureVectorRule,
+        raw_feature_vector: RawFeatureVector,
         exc: Exception,
     ) -> None:
-        """Log an unexpected validation rule exception.
-
-        Parameters:
-            rule: Rule that raised unexpectedly.
-            feature_vector: FeatureVector being validated.
-            exc: Original exception raised by the rule.
-
-        Returns:
-            None.
-
-        Exceptions:
-            None.
-        """
+        """Log unexpected rule failures with structured context."""
 
         logger.exception(
-            "FeatureVector validation rule failed unexpectedly.",
+            "RawFeatureVector validation rule failed unexpectedly.",
             extra={
                 "component": "validation",
                 "rule": rule.name,
-                "feature_vector_id": feature_vector.metadata.feature_vector_id,
+                "feature_vector_id": raw_feature_vector.feature_vector_id,
                 "exception_type": exc.__class__.__name__,
             },
         )
 
 
-def validate_feature_vector(
-    feature_vector: FeatureVector | Mapping[str, Any],
-) -> FeatureVector:
-    """Validate input and return a FeatureVector when valid.
+def validate_raw_feature_vector(
+    raw_feature_vector: RawFeatureVector | Mapping[str, Any],
+) -> ValidatedRawFeatureVector:
+    """Validate ETL output and return the trusted runtime contract."""
 
-    Parameters:
-        feature_vector: Parsed FeatureVector or mapping that can be parsed into
-            a FeatureVector.
-
-    Returns:
-        Parsed FeatureVector when validation succeeds.
-
-    Exceptions:
-        SchemaValidationError: Raised when input cannot be parsed as a
-            FeatureVector.
-        FeatureValidationError: Raised when semantic validation fails.
-        ValidationError: Raised when an unexpected validator failure occurs.
-    """
-
-    return FeatureVectorValidator().validate_or_raise(feature_vector)
+    return RawFeatureVectorValidator().validate_or_raise(raw_feature_vector)
 
 
-def _parse_model(model_type: type[FeatureVector], data: Mapping[str, Any]) -> FeatureVector:
-    """Parse a mapping into a Pydantic model across Pydantic versions.
+# Deprecated names retained for a non-breaking API migration. They validate
+# RawFeatureVector inputs and must not be used to revive the legacy contract.
+FeatureVectorValidator = RawFeatureVectorValidator
+validate_feature_vector = validate_raw_feature_vector
 
-    Parameters:
-        model_type: Pydantic model class to parse.
-        data: Mapping input to parse.
 
-    Returns:
-        Parsed FeatureVector model.
-
-    Exceptions:
-        pydantic.ValidationError: Raised when parsing fails.
-    """
+def _parse_model(
+    model_type: type[RawFeatureVector],
+    data: Mapping[str, Any],
+) -> RawFeatureVector:
+    """Parse a mapping into a Pydantic model across supported versions."""
 
     if hasattr(model_type, "model_validate"):
         return model_type.model_validate(data)  # type: ignore[attr-defined]

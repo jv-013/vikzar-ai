@@ -31,7 +31,7 @@ class ValidationIssue(BaseModel):
 
 
 class ValidationReport(BaseModel):
-    """Stores the result of validating a FeatureVector.
+    """Stores the result of validating a RawFeatureVector.
 
     Parameters:
         is_valid: True when no validation errors were found.

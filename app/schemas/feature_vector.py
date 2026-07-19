@@ -1,3 +1,5 @@
+"""Deprecated pre-V1 ETL-to-AI contract retained for source compatibility."""
+
 from pydantic import BaseModel
 
 from .metadata import Metadata
@@ -18,14 +20,13 @@ from .system import System
 
 class FeatureVector(BaseModel):
     """
-    Final production Feature Vector.
+    Deprecated legacy contract.
 
-    This is the official contract between
-    the ETL subsystem and the AI subsystem.
-
-    Every 100 ms, one FeatureVector enters
-    the AI pipeline.
+    RawFeatureVector is the locked, ETL-owned input to the AI pipeline.
+    New runtime code must import and consume RawFeatureVector instead.
     """
+
+    __deprecated__ = "Use app.schemas.raw_feature_vector.RawFeatureVector."
 
     metadata: Metadata
 
