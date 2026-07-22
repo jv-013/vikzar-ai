@@ -1,11 +1,23 @@
-"""Entry point for vikzar-ai scaffold"""
+"""Production entry point for the offline Vikzar compute application."""
 
-import sys
+from __future__ import annotations
 
 
-def main(argv=None):
-    argv = argv or sys.argv[1:]
-    print("vikzar-ai scaffold created. Use the `app` package to start building your application.")
+def main() -> None:
+    """Load validated environment settings and run the local API node."""
+
+    import uvicorn
+
+    from app.api.configuration import APISettings
+
+    settings = APISettings.from_environment()
+    uvicorn.run(
+        "app.api.server:create_app_from_environment",
+        factory=True,
+        host=settings.host,
+        port=settings.port,
+        log_level=settings.log_level.lower(),
+    )
 
 
 if __name__ == "__main__":

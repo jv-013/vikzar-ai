@@ -125,29 +125,23 @@ AI Engine     Dashboard      Cloud Platform
 
 # AI Pipeline
 
+**Corrected to match the actual implemented runtime path** (verified directly against `app/api/orchestration.py` — Platform Lock pass). The diagram below reflects what real requests actually go through today:
+
 ```
-FeatureVector
+RawFeatureVector
       │
 Validation
       │
-Knowledge Base
+Inference Engine (Phase 8)
       │
-Lookup Engine
+Risk Engine (Phase 9, ACL risk assessment)
       │
-Feature Enhancement
+FastAPI response
       │
-Enhanced FeatureVector
-      │
-Inference Engine
-      │
-Risk Engine
-      │
-Vikzar Index
-      │
-FastAPI
-      │
-Dashboard
+(optional) Firebase — via Cloud Functions, never a direct write
 ```
+
+The Knowledge Base / Lookup Engine / Feature Enhancement / Muscle Activity Estimation subsystem (`app/knowledge_base/`, `app/lookup_engine/`, `app/feature_enhancement/`, `app/muscle_activity_estimation/`) is real, tested code (~2,232 lines) — it is just not called by `app/api/orchestration.py` today. Whether to wire it into the live path or retire it is an open product/architecture decision, not resolved by this correction.
 
 ---
 
@@ -260,11 +254,14 @@ Detailed documentation is available in the `docs/` directory.
 - Project Vision
 - System Architecture
 - ETL Architecture
-- AI Architecture
+- AI Architecture (`docs/ai/01`–`10` — code-accurate; supersedes this README's high-level diagrams wherever they disagree)
 - Runtime Architecture
 - Cloud Architecture
+- Production Bluetooth Architecture (`docs/architecture/08_PRODUCTION_BLUETOOTH_ARCHITECTURE.md`)
+- Universal Pod Mounting research (`docs/research/UNIVERSAL_POD_MOUNTING.md`)
 - Coding Guidelines
 - Contributing Guide
+- Repo Hygiene Report (`docs/development/06_REPO_HYGIENE_REPORT.md`)
 - Future Roadmap
 
 ---
@@ -317,6 +314,10 @@ Output:
 
 # Project Status
 
-Under active development.
+Under active development. Honestly, as of the Platform Lock pass (bringing this repository and `vikzar-app` into one coherent architecture):
 
-This repository represents the core software platform powering Vikzar AI.
+- **Real and working**: the full Phase 3–10 offline pipeline (dataset building → benchmark models → production model training → evaluation → experiment registry → inference → risk scoring → FastAPI) — 795 passing tests, verified by actually running them, not just reading the code. `scripts/bootstrap_local_artifacts.py` runs this pipeline for real (against synthetic data) to produce a bootable artifact set.
+- **Real, newly added, untested against physical hardware**: a `bleak`-based BLE transport (`app/etl/receiver/bleak_transport.py`) and a Cloud-Function-calling Firebase transport (`app/api/firebase_callable_transport.py`), both implementing this pipeline's existing `BLETransport`/`FirebaseTransport` interfaces for real — no hardware or deployed Cloud Functions exist yet to exercise them against.
+- **Not yet real**: any trained model artifact from real captured sessions (only synthetic-data-trained ones exist), a physically connected Universal Pod/EMG Band, and deployed Cloud Functions on the Firebase side (built and tested in the sibling `vikzar-app` repository's `functions/`, not deployed).
+
+This repository represents the core software platform powering Vikzar AI. See `vikzar-app/DECISIONS.md` ADR-066 through ADR-070 for the cross-repo integration decisions made this pass, and `docs/development/06_REPO_HYGIENE_REPORT.md` for a pending repo-cleanup decision awaiting review.

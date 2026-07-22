@@ -1,3 +1,5 @@
-"""Benchmarking tools for vikzar-ai"""
+"""Offline orchestration for permanent Phase 6 benchmark experiments."""
 
-__all__ = []
+from .trainer import BenchmarkAdapter, BenchmarkTrainer
+
+__all__ = ["BenchmarkAdapter", "BenchmarkTrainer"]

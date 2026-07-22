@@ -1,0 +1,20 @@
+"""Versioned defaults for permanent Phase 6 benchmark models."""
+
+from __future__ import annotations
+
+BENCHMARK_MODEL_SCHEMA_VERSION = "1.0.0"
+BENCHMARK_MODEL_MEDIA_TYPE = "application/vnd.vikzar.benchmark-model+json"
+
+DUMMY_MEAN_ALGORITHM = "benchmark.dummy_mean_regressor"
+LINEAR_REGRESSION_ALGORITHM = "benchmark.linear_regression"
+RIDGE_REGRESSION_ALGORITHM = "benchmark.ridge_regression"
+RANDOM_FOREST_ALGORITHM = "benchmark.random_forest_regressor"
+
+DEFAULT_RANDOM_SEED = 41
+DEFAULT_RIDGE_ALPHA = 1.0
+DEFAULT_RANDOM_FOREST_ESTIMATORS = 32
+DEFAULT_RANDOM_FOREST_MAX_DEPTH = 8
+MAXIMUM_RANDOM_FOREST_MAX_DEPTH = 64
+DEFAULT_RANDOM_FOREST_MIN_SAMPLES_SPLIT = 2
+DEFAULT_RANDOM_FOREST_MIN_SAMPLES_LEAF = 1
+DEFAULT_RANDOM_FOREST_MAX_FEATURES_FRACTION = 1.0
