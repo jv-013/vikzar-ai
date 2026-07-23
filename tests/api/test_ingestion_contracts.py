@@ -102,6 +102,40 @@ def test_ingest_live_tick_includes_additive_risk_engine_subscores() -> None:
     assert "workloadRatio" not in wire["metrics"]
 
 
+def test_ingest_live_tick_omits_device_rssi_and_capture_phase_when_unset() -> None:
+    payload = IngestLiveTickPayload(
+        session_id="s1",
+        player_id="p1",
+        sequence_number=1,
+        tick_timestamp=datetime(2026, 7, 19, tzinfo=timezone.utc),
+        connection_status="connected",
+        metrics=LiveTickMetrics(
+            current_load=1.0, cumulative_impacts=0, risk_score=0.1, risk_level="low"
+        ),
+    )
+    wire = payload.to_wire()
+    assert "deviceRssi" not in wire
+    assert "capturePhase" not in wire
+
+
+def test_ingest_live_tick_includes_device_rssi_and_capture_phase_when_set() -> None:
+    payload = IngestLiveTickPayload(
+        session_id="s1",
+        player_id="p1",
+        sequence_number=1,
+        tick_timestamp=datetime(2026, 7, 19, tzinfo=timezone.utc),
+        connection_status="connected",
+        metrics=LiveTickMetrics(
+            current_load=1.0, cumulative_impacts=0, risk_score=0.1, risk_level="low"
+        ),
+        device_rssi={"SP-1": -58.0},
+        capture_phase="recording",
+    )
+    wire = payload.to_wire()
+    assert wire["deviceRssi"] == {"SP-1": -58.0}
+    assert wire["capturePhase"] == "recording"
+
+
 def test_complete_session_to_wire_matches_section_21_5_field_names() -> None:
     payload = CompleteSessionPayload(
         session_id="s1",

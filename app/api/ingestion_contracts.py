@@ -98,6 +98,13 @@ class IngestLiveTickPayload(BaseModel):
     connection_status: str
     metrics: LiveTickMetrics
     device_battery: dict[str, float] | None = None
+    # Additive (Phase 11 Section 3/4) — mirrors device_battery's shape.
+    # No current transport reports RSSI; left unset (None) rather than
+    # fabricated, per the "schema readiness, not fake values" constraint.
+    device_rssi: dict[str, float] | None = None
+    # Additive (Phase 11 Section 3) — only meaningful while the session is
+    # "live"; left unset unless a caller actually tracks this state.
+    capture_phase: str | None = None
 
     def to_wire(self) -> dict[str, Any]:
         return _drop_none(
@@ -110,6 +117,8 @@ class IngestLiveTickPayload(BaseModel):
                 "connectionStatus": self.connection_status,
                 "metrics": self.metrics.to_wire(),
                 "deviceBattery": self.device_battery,
+                "deviceRssi": self.device_rssi,
+                "capturePhase": self.capture_phase,
             }
         )
 
